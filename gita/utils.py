@@ -423,7 +423,11 @@ def exec_async_tasks(tasks: List[Coroutine]) -> List[Union[None, str]]:
     return errors
 
 
-def describe(repos: Dict[str, Dict[str, str]], no_colors: bool = False) -> str:
+def describe(
+    repos: Dict[str, Dict[str, str]],
+    no_colors: bool = False,
+    yield_str: bool = True,
+) -> Union[str, list]:
     """
     Return the status of all repos
     """
@@ -437,8 +441,12 @@ def describe(repos: Dict[str, Dict[str, str]], no_colors: bool = False) -> str:
         funcs[idx] = partial(get_repo_status, no_colors=True)
 
     for name in sorted(repos):
-        info_items = " ".join(f(repos[name]) for f in funcs)
-        yield f"{name:<{name_width}}{info_items}"
+        info_lst = [f(repos[name]) for f in funcs]
+        info_items = " ".join(info_lst)
+        if yield_str:
+            yield f"{name:<{name_width}}{info_items}"
+        else:
+            yield [name] + info_lst
 
 
 def get_cmds_from_files() -> Dict[str, Dict[str, str]]:
