@@ -205,20 +205,79 @@ def f_ll(args: argparse.Namespace):
     if args.group:  # only display repos in this group
         group_repos = utils.get_groups()[args.group]["repos"]
         repos = {k: repos[k] for k in group_repos if k in repos}
-    if args.g:  # display by group
-        if group_repos:
-            print(f"{args.group}:")
-            for line in utils.describe(repos, no_colors=args.no_colors):
-                print("  ", line)
+    ##if args.g:  # display by group
+    ##    if group_repos:
+    ##        print(f"{args.group}:")
+    ##        for line in utils.describe(repos, no_colors=args.no_colors):
+    ##            print("  ", line)
+    ##    else:
+    ##        for g, prop in utils.get_groups().items():
+    ##            print(f"{g}:")
+    ##            g_repos = {k: repos[k] for k in prop["repos"] if k in repos}
+    ##            for line in utils.describe(g_repos, no_colors=args.no_colors):
+    ##                print("  ", line)
+    ##else:
+    ##    for line in utils.describe(repos, no_colors=args.no_colors):
+    ##        print(line)
+    from rich.console import Console
+    from rich.table import Table
+    import re
+    from collections import OrderedDict
+    from copy import copy
+
+    def split(s):
+        spl = s.split()
+        if len(spl) == 1:
+            return s.strip(), " "
         else:
-            for g, prop in utils.get_groups().items():
-                print(f"{g}:")
-                g_repos = {k: repos[k] for k in prop["repos"] if k in repos}
-                for line in utils.describe(g_repos, no_colors=args.no_colors):
-                    print("  ", line)
-    else:
-        for line in utils.describe(repos, no_colors=args.no_colors):
-            print(line)
+            assert len(spl) == 2, f"{len(spl)=} {spl=}"
+            return (si.strip() for si in spl)
+
+    def transpose(lists):
+        return list(map(list, zip(*lists)))
+
+    rex = re.compile(r"^(\x1b[^m]+?m)(.+?)\s*(\x1b[^m]+?m)$")
+    def branch_filter(ss):
+        m = rex.match(ss)
+        if m is None:
+            return *split(ss), len(ss)
+        else:
+            branch, status = split(m.group(2))
+            return m.group(1) + branch + m.group(3), status, len(branch)
+
+    rows = utils.describe(repos, yield_str=False, no_colors=args.no_colors)
+    columns = transpose(rows)
+    branch_status_len_cols = transpose(map(branch_filter, columns[1]))
+    branch_min_width = max(branch_status_len_cols[2])
+    col_dct = OrderedDict()
+    col_dct["repo"] = columns[0]
+    col_dct["branch"] = branch_status_len_cols[0]
+    col_dct["status"] = branch_status_len_cols[1]
+    col_dct["commit_msg"] = columns[2]
+    col_dct["stuff"] = columns[3]
+
+    table = Table()
+    col_defauls_kwds = dict(justify="left", no_wrap=True)
+    cols_desc = OrderedDict(
+        repo=copy(col_defauls_kwds),
+        branch=copy(col_defauls_kwds),
+        status=copy(col_defauls_kwds),
+        commit_msg=copy(col_defauls_kwds),
+        stuff=copy(col_defauls_kwds),
+        )
+    ##cols_desc["repo"].update(max_width=30)
+    ##cols_desc["branch"].update(min_width=branch_min_width+8)
+    ##cols_desc["commit_msg"].update(max_width=30)
+    cols_desc["status"].update(min_width=3)
+
+    for name, kwds in cols_desc.items():
+        table.add_column(name, **kwds)
+
+    for row in transpose(col_dct.values()):
+        table.add_row(*row)
+
+    console = Console()
+    console.print(table)
 
 
 def f_ls(args: argparse.Namespace):
