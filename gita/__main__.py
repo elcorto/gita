@@ -27,7 +27,7 @@ import glob
 from collections import OrderedDict
 from typing import Sequence
 
-import tabulate
+import tabulate  # type: ignore
 
 from . import utils, info, common
 
@@ -205,7 +205,7 @@ def f_ll(args: argparse.Namespace):
     Display details of all repos
     """
 
-    def print_repo_table(repos: Sequence):
+    def print_repo_table(repos):
         rows = utils.describe(repos, yield_str=False, no_colors=args.no_colors)
         columns = utils.transpose(rows)
         branch_status = utils.transpose(
