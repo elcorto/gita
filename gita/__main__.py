@@ -219,11 +219,9 @@ def f_ll(args: argparse.Namespace):
     ##else:
     ##    for line in utils.describe(repos, no_colors=args.no_colors):
     ##        print(line)
-    from rich.console import Console
-    from rich.table import Table
+    import tabulate
     import re
     from collections import OrderedDict
-    from copy import copy
 
     def split(s):
         spl = s.split()
@@ -240,44 +238,28 @@ def f_ll(args: argparse.Namespace):
     def branch_filter(ss):
         m = rex.match(ss)
         if m is None:
-            return *split(ss), len(ss)
+            return split(ss)
         else:
             branch, status = split(m.group(2))
-            return m.group(1) + branch + m.group(3), status, len(branch)
+            return m.group(1) + branch + m.group(3), status.strip()
+
+    def truncate(line, length=20):
+        if len(line) > length:
+            return line[:length] + ".."
+        else:
+            return line
 
     rows = utils.describe(repos, yield_str=False, no_colors=args.no_colors)
     columns = transpose(rows)
-    branch_status_len_cols = transpose(map(branch_filter, columns[1]))
-    branch_min_width = max(branch_status_len_cols[2])
+    branch_status = transpose(map(branch_filter, columns[1]))
     col_dct = OrderedDict()
-    col_dct["repo"] = columns[0]
-    col_dct["branch"] = branch_status_len_cols[0]
-    col_dct["status"] = branch_status_len_cols[1]
-    col_dct["commit_msg"] = columns[2]
+    col_dct["repo"] = map(truncate, columns[0])
+    col_dct["branch"] = branch_status[0]
+    col_dct["status"] = branch_status[1]
+    col_dct["commit_msg"] = map(truncate, columns[2])
     col_dct["stuff"] = columns[3]
 
-    table = Table()
-    col_defauls_kwds = dict(justify="left", no_wrap=True)
-    cols_desc = OrderedDict(
-        repo=copy(col_defauls_kwds),
-        branch=copy(col_defauls_kwds),
-        status=copy(col_defauls_kwds),
-        commit_msg=copy(col_defauls_kwds),
-        stuff=copy(col_defauls_kwds),
-        )
-    ##cols_desc["repo"].update(max_width=30)
-    ##cols_desc["branch"].update(min_width=branch_min_width+8)
-    ##cols_desc["commit_msg"].update(max_width=30)
-    cols_desc["status"].update(min_width=3)
-
-    for name, kwds in cols_desc.items():
-        table.add_column(name, **kwds)
-
-    for row in transpose(col_dct.values()):
-        table.add_row(*row)
-
-    console = Console()
-    console.print(table)
+    print(tabulate.tabulate(transpose(col_dct.values()), headers=col_dct.keys()))
 
 
 def f_ls(args: argparse.Namespace):
