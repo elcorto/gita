@@ -117,7 +117,9 @@ def get_groups() -> Dict[str, Dict[str, Union[str, List]]]:
             # filter out invalid repos
             groups = {
                 r["name"]: {
-                    "repos": [repo for repo in r["repos"].split() if repo in repos],
+                    "repos": [
+                        repo for repo in r["repos"].split() if repo in repos
+                    ],
                     "path": r["path"],
                 }
                 for r in rows
@@ -244,7 +246,9 @@ def write_to_repo_file(repos: Dict[str, Dict[str, str]], mode: str):
     fname = common.get_config_fname("repos.csv")
     os.makedirs(os.path.dirname(fname), exist_ok=True)
     with open(fname, mode, newline="") as f:
-        writer = csv.writer(f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(
+            f, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+        )
         writer.writerows(data)
 
 
@@ -301,7 +305,9 @@ def add_repos(
     @param repos: name -> path
     """
     existing_paths = {prop["path"] for prop in repos.values()}
-    new_paths = {p for p in new_paths if is_git(p, include_bare, exclude_submodule)}
+    new_paths = {
+        p for p in new_paths if is_git(p, include_bare, exclude_submodule)
+    }
     new_paths = new_paths - existing_paths
     new_repos = {}
     if new_paths:
@@ -310,7 +316,9 @@ def add_repos(
             for p in new_paths:
                 print(p)
             return {}
-        name_counts = Counter(os.path.basename(os.path.normpath(p)) for p in new_paths)
+        name_counts = Counter(
+            os.path.basename(os.path.normpath(p)) for p in new_paths
+        )
         new_repos = {
             _make_name(path, repos, name_counts): {
                 "path": path,
@@ -324,7 +332,9 @@ def add_repos(
     return new_repos
 
 
-def _generate_dir_hash(repo_path: str, paths: List[str]) -> Tuple[Tuple[str, ...], str]:
+def _generate_dir_hash(
+    repo_path: str, paths: List[str]
+) -> Tuple[Tuple[str, ...], str]:
     """
     Return relative parent strings, and the parent head string
 
@@ -341,7 +351,9 @@ def _generate_dir_hash(repo_path: str, paths: List[str]) -> Tuple[Tuple[str, ...
     return (tail, *rel), head
 
 
-def auto_group(repos: Dict[str, Dict[str, str]], paths: List[str]) -> Dict[str, Dict]:
+def auto_group(
+    repos: Dict[str, Dict[str, str]], paths: List[str]
+) -> Dict[str, Dict]:
     """
 
     @params repos: repos to be grouped
@@ -375,7 +387,9 @@ def parse_clone_config(fname: str) -> Iterator[List[str]]:
             yield line.strip().split(",")
 
 
-async def run_async(repo_name: str, path: str, cmds: List[str]) -> Union[None, str]:
+async def run_async(
+    repo_name: str, path: str, cmds: List[str]
+) -> Union[None, str]:
     """
     Run `cmds` asynchronously in `path` directory. Return the `path` if
     execution fails.
@@ -403,7 +417,9 @@ def format_output(s: str, prefix: str):
     """
     Prepends every line in given string with the given prefix.
     """
-    return "".join([f"{prefix}: {line}" for line in s.splitlines(keepends=True)])
+    return "".join(
+        [f"{prefix}: {line}" for line in s.splitlines(keepends=True)]
+    )
 
 
 def exec_async_tasks(tasks: List[Coroutine]) -> List[Union[None, str]]:

@@ -68,7 +68,8 @@ def f_add(args: argparse.Namespace):
         paths = (
             p.rstrip(os.path.sep)
             for p in chain.from_iterable(
-                glob.glob(os.path.join(p, "**/"), recursive=True) for p in args.paths
+                glob.glob(os.path.join(p, "**/"), recursive=True)
+                for p in args.paths
             )
         )
     new_repos = utils.add_repos(
@@ -164,7 +165,9 @@ def f_clone(args: argparse.Namespace):
     if args.preserve_path:
         utils.exec_async_tasks(
             utils.run_async(repo_name, path, ["git", "clone", url, abs_path])
-            for url, repo_name, abs_path in utils.parse_clone_config(args.clonee)
+            for url, repo_name, abs_path in utils.parse_clone_config(
+                args.clonee
+            )
         )
     else:
         utils.exec_async_tasks(
@@ -205,7 +208,9 @@ def f_ll(args: argparse.Namespace):
     def print_repo_table(repos: Sequence):
         rows = utils.describe(repos, yield_str=False, no_colors=args.no_colors)
         columns = utils.transpose(rows)
-        branch_status = utils.transpose(map(utils.branch_str_filter, columns[1]))
+        branch_status = utils.transpose(
+            map(utils.branch_str_filter, columns[1])
+        )
         col_dct = OrderedDict()
         col_dct["repo"] = map(utils.truncate_str, columns[0])
         col_dct["branch"] = branch_status[0]
@@ -257,7 +262,9 @@ def f_group(args: argparse.Namespace):
             print(" ".join(groups[gname]["repos"]))
         else:
             for group, prop in groups.items():
-                print(f"{info.Color.underline}{group}{info.Color.end}: {prop['path']}")
+                print(
+                    f"{info.Color.underline}{group}{info.Color.end}: {prop['path']}"
+                )
                 for r in prop["repos"]:
                     print("  -", r)
     elif cmd == "ls":
@@ -299,7 +306,10 @@ def f_group(args: argparse.Namespace):
         gname = args.gname
         if gname in groups:
             group = {
-                gname: {"repos": groups[gname]["repos"], "path": groups[gname]["path"]}
+                gname: {
+                    "repos": groups[gname]["repos"],
+                    "path": groups[gname]["path"],
+                }
             }
             for repo in args.to_rm:
                 utils.delete_repo_from_groups(repo, group)
@@ -427,18 +437,26 @@ def f_clear(_):
 
 def main(argv=None):
     p = argparse.ArgumentParser(
-        prog="gita", formatter_class=argparse.RawTextHelpFormatter, description=__doc__
+        prog="gita",
+        formatter_class=argparse.RawTextHelpFormatter,
+        description=__doc__,
     )
     subparsers = p.add_subparsers(
         title="sub-commands", help="additional help with sub-command -h"
     )
 
     version = pkg_resources.require("gita")[0].version
-    p.add_argument("-v", "--version", action="version", version=f"%(prog)s {version}")
+    p.add_argument(
+        "-v", "--version", action="version", version=f"%(prog)s {version}"
+    )
 
     # bookkeeping sub-commands
-    p_add = subparsers.add_parser("add", description="add repo(s)", help="add repo(s)")
-    p_add.add_argument("paths", nargs="+", type=_path_name, help="repo(s) to add")
+    p_add = subparsers.add_parser(
+        "add", description="add repo(s)", help="add repo(s)"
+    )
+    p_add.add_argument(
+        "paths", nargs="+", type=_path_name, help="repo(s) to add"
+    )
     p_add.add_argument("-n", "--dry-run", action="store_true", help="dry run")
     p_add.add_argument(
         "-g",
@@ -447,7 +465,10 @@ def main(argv=None):
         help="add repo(s) to the specified group",
     )
     p_add.add_argument(
-        "-s", "--skip-submodule", action="store_true", help="skip submodule repo(s)"
+        "-s",
+        "--skip-submodule",
+        action="store_true",
+        help="skip submodule repo(s)",
     )
     xgroup = p_add.add_mutually_exclusive_group()
     xgroup.add_argument(
@@ -463,14 +484,19 @@ def main(argv=None):
         help="recursively add repo(s) in the given path(s) "
         "and create hierarchical groups based on folder structure.",
     )
-    xgroup.add_argument("-b", "--bare", action="store_true", help="add bare repo(s)")
+    xgroup.add_argument(
+        "-b", "--bare", action="store_true", help="add bare repo(s)"
+    )
     p_add.set_defaults(func=f_add)
 
     p_rm = subparsers.add_parser(
         "rm", description="remove repo(s)", help="remove repo(s)"
     )
     p_rm.add_argument(
-        "repo", nargs="+", choices=utils.get_repos(), help="remove the chosen repo(s)"
+        "repo",
+        nargs="+",
+        choices=utils.get_repos(),
+        help="remove the chosen repo(s)",
     )
     p_rm.set_defaults(func=f_rm)
 
@@ -512,7 +538,10 @@ def main(argv=None):
         "rename", description="rename a repo", help="rename a repo"
     )
     p_rename.add_argument(
-        "repo", nargs=1, choices=utils.get_repos(), help="rename the chosen repo"
+        "repo",
+        nargs=1,
+        choices=utils.get_repos(),
+        help="rename the chosen repo",
     )
     p_rename.add_argument("new_name", help="new name")
     p_rename.set_defaults(func=f_rename)
@@ -569,13 +598,22 @@ def main(argv=None):
         dest="info_cmd", help="additional help with sub-command -h"
     )
     info_cmds.add_parser(
-        "ll", description="show used and unused information items of the ll sub-command"
+        "ll",
+        description="show used and unused information items of the ll sub-command",
     )
-    info_cmds.add_parser("add", description="Enable information item.").add_argument(
-        "info_item", choices=info.ALL_INFO_ITEMS, help="information item to add"
+    info_cmds.add_parser(
+        "add", description="Enable information item."
+    ).add_argument(
+        "info_item",
+        choices=info.ALL_INFO_ITEMS,
+        help="information item to add",
     )
-    info_cmds.add_parser("rm", description="Disable information item.").add_argument(
-        "info_item", choices=info.ALL_INFO_ITEMS, help="information item to delete"
+    info_cmds.add_parser(
+        "rm", description="Disable information item."
+    ).add_argument(
+        "info_item",
+        choices=info.ALL_INFO_ITEMS,
+        help="information item to delete",
     )
 
     ll_doc = f"""  status symbols:
@@ -607,7 +645,9 @@ def main(argv=None):
         action="store_true",
         help="Disable coloring on the branch names.",
     )
-    p_ll.add_argument("-g", action="store_true", help="Show repo summaries by group.")
+    p_ll.add_argument(
+        "-g", action="store_true", help="Show repo summaries by group."
+    )
     p_ll.set_defaults(func=f_ll)
 
     p_context = subparsers.add_parser(
@@ -642,18 +682,24 @@ def main(argv=None):
     p_ls.set_defaults(func=f_ls)
 
     p_group = subparsers.add_parser(
-        "group", description="list, add, or remove repo group(s)", help="group repos"
+        "group",
+        description="list, add, or remove repo group(s)",
+        help="group repos",
     )
     p_group.set_defaults(func=f_group)
     group_cmds = p_group.add_subparsers(
         dest="group_cmd", help="additional help with sub-command -h"
     )
-    pg_ll = group_cmds.add_parser("ll", description="List all groups with repos.")
+    pg_ll = group_cmds.add_parser(
+        "ll", description="List all groups with repos."
+    )
     pg_ll.add_argument(
         "to_show", nargs="?", choices=utils.get_groups(), help="group to show"
     )
     group_cmds.add_parser("ls", description="List all group names.")
-    pg_add = group_cmds.add_parser("add", description="Add repo(s) to a group.")
+    pg_add = group_cmds.add_parser(
+        "add", description="Add repo(s) to a group."
+    )
     pg_add.add_argument(
         "to_group",
         nargs="+",
@@ -691,7 +737,9 @@ def main(argv=None):
         required=True,
         help="group name",
     )
-    pg_rename = group_cmds.add_parser("rename", description="Change group name.")
+    pg_rename = group_cmds.add_parser(
+        "rename", description="Change group name."
+    )
     pg_rename.add_argument(
         "gname",
         metavar="group-name",
@@ -702,7 +750,10 @@ def main(argv=None):
         "new_name", metavar="new-name", type=_group_name, help="new group name"
     )
     group_cmds.add_parser("rm", description="Remove group(s).").add_argument(
-        "to_ungroup", nargs="+", choices=utils.get_groups(), help="group(s) to delete"
+        "to_ungroup",
+        nargs="+",
+        choices=utils.get_groups(),
+        help="group(s) to delete",
     )
 
     # superman mode
