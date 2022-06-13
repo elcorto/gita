@@ -24,6 +24,10 @@ import pkg_resources
 from itertools import chain
 from pathlib import Path
 import glob
+from collections import OrderedDict
+from typing import Sequence
+
+import tabulate
 
 from . import utils, info, common
 
@@ -197,6 +201,24 @@ def f_ll(args: argparse.Namespace):
     """
     Display details of all repos
     """
+
+    def print_repo_table(repos: Sequence):
+        rows = utils.describe(repos, yield_str=False, no_colors=args.no_colors)
+        columns = utils.transpose(rows)
+        branch_status = utils.transpose(map(utils.branch_str_filter, columns[1]))
+        col_dct = OrderedDict()
+        col_dct["repo"] = map(utils.truncate_str, columns[0])
+        col_dct["branch"] = branch_status[0]
+        col_dct["status"] = branch_status[1]
+        col_dct["commit_msg"] = map(utils.truncate_str, columns[2])
+        col_dct["stuff"] = columns[3]
+
+        print(
+            tabulate.tabulate(
+                utils.transpose(col_dct.values()), headers=col_dct.keys()
+            )
+        )
+
     repos = utils.get_repos()
     ctx = utils.get_context()
     if args.group is None and ctx:
@@ -205,61 +227,17 @@ def f_ll(args: argparse.Namespace):
     if args.group:  # only display repos in this group
         group_repos = utils.get_groups()[args.group]["repos"]
         repos = {k: repos[k] for k in group_repos if k in repos}
-    ##if args.g:  # display by group
-    ##    if group_repos:
-    ##        print(f"{args.group}:")
-    ##        for line in utils.describe(repos, no_colors=args.no_colors):
-    ##            print("  ", line)
-    ##    else:
-    ##        for g, prop in utils.get_groups().items():
-    ##            print(f"{g}:")
-    ##            g_repos = {k: repos[k] for k in prop["repos"] if k in repos}
-    ##            for line in utils.describe(g_repos, no_colors=args.no_colors):
-    ##                print("  ", line)
-    ##else:
-    ##    for line in utils.describe(repos, no_colors=args.no_colors):
-    ##        print(line)
-    import tabulate
-    import re
-    from collections import OrderedDict
-
-    def split(s):
-        spl = s.split()
-        if len(spl) == 1:
-            return s.strip(), " "
+    if args.g:  # display by group
+        if group_repos:
+            print(f"{args.group}:")
+            print_repo_table(repos)
         else:
-            assert len(spl) == 2, f"{len(spl)=} {spl=}"
-            return (si.strip() for si in spl)
-
-    def transpose(lists):
-        return list(map(list, zip(*lists)))
-
-    rex = re.compile(r"^(\x1b[^m]+?m)(.+?)\s*(\x1b[^m]+?m)$")
-    def branch_filter(ss):
-        m = rex.match(ss)
-        if m is None:
-            return split(ss)
-        else:
-            branch, status = split(m.group(2))
-            return m.group(1) + branch + m.group(3), status.strip()
-
-    def truncate(line, length=20):
-        if len(line) > length:
-            return line[:length] + ".."
-        else:
-            return line
-
-    rows = utils.describe(repos, yield_str=False, no_colors=args.no_colors)
-    columns = transpose(rows)
-    branch_status = transpose(map(branch_filter, columns[1]))
-    col_dct = OrderedDict()
-    col_dct["repo"] = map(truncate, columns[0])
-    col_dct["branch"] = branch_status[0]
-    col_dct["status"] = branch_status[1]
-    col_dct["commit_msg"] = map(truncate, columns[2])
-    col_dct["stuff"] = columns[3]
-
-    print(tabulate.tabulate(transpose(col_dct.values()), headers=col_dct.keys()))
+            for g, prop in utils.get_groups().items():
+                print(f"{g}:")
+                g_repos = {k: repos[k] for k in prop["repos"] if k in repos}
+                print_repo_table(g_repos)
+    else:
+        print_repo_table(repos)
 
 
 def f_ls(args: argparse.Namespace):

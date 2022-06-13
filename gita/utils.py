@@ -5,9 +5,10 @@ import csv
 import asyncio
 import platform
 import subprocess
+import re
 from functools import lru_cache, partial
 from pathlib import Path
-from typing import List, Dict, Coroutine, Union, Iterator, Tuple
+from typing import List, Dict, Coroutine, Union, Iterator, Tuple, Sequence
 from collections import Counter, defaultdict
 
 from . import info
@@ -518,3 +519,34 @@ def parse_repos_and_rest(
         # if not set here, all repos are chosen
         repos = chosen
     return repos, input[i:]
+
+
+def split_branch_str(s: str) -> Sequence[str]:
+    spl = s.split()
+    if len(spl) == 1:
+        return s.strip(), " "
+    else:
+        assert len(spl) == 2, f"{len(spl)=} {spl=}"
+        return (si.strip() for si in spl)
+
+
+def transpose(lists: Sequence[list]) -> Sequence[list]:
+    return list(map(list, zip(*lists)))
+
+
+def branch_str_filter(
+    branch_str: str, rex=re.compile(r"^(\x1b[^m]+?m)(.+?)\s*(\x1b[^m]+?m)$")
+) -> tuple:
+    m = rex.match(branch_str)
+    if m is None:
+        return split_branch_str(branch_str)
+    else:
+        branch, status = split_branch_str(m.group(2))
+        return m.group(1) + branch + m.group(3), status.strip()
+
+
+def truncate_str(line: str, length=20) -> str:
+    if len(line) > length:
+        return line[:length] + ".."
+    else:
+        return line
