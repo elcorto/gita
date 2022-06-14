@@ -537,13 +537,19 @@ def parse_repos_and_rest(
     return repos, input[i:]
 
 
-def split_branch_str(s: str) -> Tuple[str, str]:
-    spl = s.split()
-    if len(spl) == 1:
-        return s.strip(), " "
+def split_branch_str(branch_str: str) -> Tuple[str, str]:
+    bs = branch_str.strip()
+    spl = bs.split()
+    # no checked out branch
+    if len(spl) == 0:
+        return " ", " "
+    # branch, clean
+    elif len(spl) == 1:
+        return bs, " "
+    # branch, dirty
     else:
-        assert len(spl) == 2, f"{len(spl)=} {spl=}"
-        return tuple(si.strip() for si in spl)
+        assert len(spl) == 2, f"{bs=} {len(spl)=} {spl=}"
+        return tuple(s.strip() for s in spl)
 
 
 def transpose(lists: Sequence[list]) -> Sequence[list]:
