@@ -85,15 +85,7 @@ def get_info_funcs() -> List[Callable[[str], str]]:
     take the repo path as input and return the corresponding information as str.
     See `get_path`, `get_repo_status`, `get_common_commit` for examples.
     """
-    to_display = get_info_items()
-    # This re-definition is to make unit test mocking to work
-    all_info_items = {
-            'branch': get_repo_status,
-            'commit_msg': get_commit_msg,
-            'commit_time': get_commit_time,
-            'path': get_path,
-        }
-    return [all_info_items[k] for k in to_display]
+    return [ALL_INFO_ITEMS[k] for k in get_info_items()]
 
 
 def get_info_items() -> List[str]:
@@ -109,7 +101,7 @@ def get_info_items() -> List[str]:
         display_items = [x for x in display_items if x in ALL_INFO_ITEMS]
     else:
         # default settings
-        display_items = ['branch', 'commit_msg', 'commit_time']
+        display_items = ['branch', 'status', 'commit_msg', 'commit_time']
     return display_items
 
 
@@ -194,6 +186,19 @@ def get_repo_status(prop: Dict[str, str], no_colors=False) -> str:
     return f'{head+" "+dirty+staged+untracked:<10}'
 
 
+def get_repo_head(prop: Dict[str, str], no_colors=False) -> str:
+    head = get_head(prop['path'])
+    color = _get_repo_status(prop, no_colors)[-1]
+    if color:
+        return f'{color}{head}{Color.end}'
+    return head
+
+
+def get_repo_state(prop: Dict[str, str], no_colors=False) -> str:
+    dirty, staged, untracked, _ = _get_repo_status(prop, no_colors)
+    return dirty+staged+untracked
+
+
 def _get_repo_status(prop: Dict[str, str], no_colors: bool) -> Tuple[str]:
     """
     Return the status of one repo
@@ -229,7 +234,8 @@ def _get_repo_status(prop: Dict[str, str], no_colors: bool) -> Tuple[str]:
 
 
 ALL_INFO_ITEMS = {
-        'branch': get_repo_status,
+        'branch': get_repo_head,
+        'status': get_repo_state,
         'commit_msg': get_commit_msg,
         'commit_time': get_commit_time,
         'path': get_path,

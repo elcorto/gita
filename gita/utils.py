@@ -537,34 +537,8 @@ def parse_repos_and_rest(
     return repos, input[i:]
 
 
-def split_branch_str(branch_str: str) -> Tuple[str, str]:
-    bs = branch_str.strip()
-    spl = bs.split()
-    # no checked out branch
-    if len(spl) == 0:
-        return " ", " "
-    # branch, clean
-    elif len(spl) == 1:
-        return bs, " "
-    # branch, dirty
-    else:
-        assert len(spl) == 2, f"{bs=} {len(spl)=} {spl=}"
-        return tuple(s.strip() for s in spl)
-
-
 def transpose(lists: Sequence[list]) -> Sequence[list]:
     return list(map(list, zip(*lists)))
-
-
-def branch_str_filter(
-    branch_str: str, rex=re.compile(r"^(\x1b[^m]+?m)(.+?)\s*(\x1b[^m]+?m)$")
-) -> tuple:
-    m = rex.match(branch_str)
-    if m is None:
-        return split_branch_str(branch_str)
-    else:
-        branch, status = split_branch_str(m.group(2))
-        return m.group(1) + branch + m.group(3), status.strip()
 
 
 def truncate_str(line: str, length=20) -> str:

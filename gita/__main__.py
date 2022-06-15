@@ -208,15 +208,12 @@ def f_ll(args: argparse.Namespace):
     def print_repo_table(repos):
         rows = utils.describe(repos, yield_str=False, no_colors=args.no_colors)
         columns = utils.transpose(rows)
-        branch_status = utils.transpose(
-            map(utils.branch_str_filter, columns[1])
-        )
         col_dct = OrderedDict()
         col_dct["repo"] = map(utils.truncate_str, columns[0])
-        col_dct["branch"] = branch_status[0]
-        col_dct["status"] = branch_status[1]
-        col_dct["commit_msg"] = map(utils.truncate_str, columns[2])
-        col_dct["stuff"] = columns[3]
+        col_dct["branch"] = columns[1]
+        col_dct["status"] = columns[2]
+        col_dct["commit_msg"] = map(utils.truncate_str, columns[3])
+        col_dct["stuff"] = columns[4]
 
         print(
             tabulate.tabulate(
