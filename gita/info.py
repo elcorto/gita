@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from functools import lru_cache
 from typing import Tuple, List, Callable, Dict
+from collections import OrderedDict
 
 from . import common
 
@@ -79,13 +80,13 @@ def get_color_encoding() -> Dict[str, str]:
     return colors
 
 
-def get_info_funcs() -> List[Callable[[str], str]]:
+def get_info_funcs() -> dict:
     """
     Return the functions to generate `gita ll` information. All these functions
     take the repo path as input and return the corresponding information as str.
     See `get_path`, `get_repo_status`, `get_common_commit` for examples.
     """
-    return [ALL_INFO_ITEMS[k] for k in get_info_items()]
+    return OrderedDict({k: ALL_INFO_ITEMS[k] for k in get_info_items()})
 
 
 def get_info_items() -> List[str]:

@@ -9,7 +9,7 @@ import re
 from functools import lru_cache, partial
 from pathlib import Path
 from typing import List, Dict, Coroutine, Union, Iterator, Tuple, Sequence
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
 
 from . import info
 from . import common
@@ -443,8 +443,7 @@ def exec_async_tasks(tasks: List[Coroutine]) -> List[Union[None, str]]:
 def describe(
     repos: Dict[str, Dict[str, str]],
     no_colors: bool = False,
-    yield_str: bool = True,
-) -> Union[str, list]:
+) -> dict:
     """
     Return the status of all repos
     """
@@ -452,19 +451,19 @@ def describe(
         name_width = max(len(n) for n in repos) + 1
     funcs = info.get_info_funcs()
 
-    get_repo_status = info.get_repo_status
-    if get_repo_status in funcs and no_colors:
-        idx = funcs.index(get_repo_status)
-        funcs[idx] = partial(get_repo_status, no_colors=True)
+    ##get_repo_status = info.get_repo_status
+    ##if get_repo_status in funcs and no_colors:
+    ##    idx = funcs.index(get_repo_status)
+    ##    funcs[idx] = partial(get_repo_status, no_colors=True)
 
+    infodct = OrderedDict({"repo": []})
+    for key in funcs:
+        infodct[key] = []
     for name in sorted(repos):
-        info_lst = [f(repos[name]) for f in funcs]
-        info_items = " ".join(info_lst)
-        if yield_str:
-            yield f"{name:<{name_width}}{info_items}"
-        else:
-            yield [name] + info_lst
-
+        infodct["repo"].append(name)
+        for attr, func in funcs.items():
+            infodct[attr].append(func(repos[name]))
+    return infodct
 
 def get_cmds_from_files() -> Dict[str, Dict[str, str]]:
     """

@@ -206,18 +206,13 @@ def f_ll(args: argparse.Namespace):
     """
 
     def print_repo_table(repos):
-        rows = utils.describe(repos, yield_str=False, no_colors=args.no_colors)
-        columns = utils.transpose(rows)
-        col_dct = OrderedDict()
-        col_dct["repo"] = map(utils.truncate_str, columns[0])
-        col_dct["head"] = columns[1]
-        col_dct["state"] = columns[2]
-        col_dct["commit_msg"] = map(utils.truncate_str, columns[3])
-        col_dct["commit_time"] = columns[4]
+        columns = utils.describe(repos, no_colors=args.no_colors)
+        for key in ["repo", "commit_msg"]:
+            columns[key] = map(utils.truncate_str, columns[key])
 
         print(
             tabulate.tabulate(
-                utils.transpose(col_dct.values()), headers=col_dct.keys()
+                utils.transpose(columns.values()), headers=columns.keys()
             )
         )
 
