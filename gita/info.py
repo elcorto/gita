@@ -101,7 +101,7 @@ def get_info_items() -> List[str]:
         display_items = [x for x in display_items if x in ALL_INFO_ITEMS]
     else:
         # default settings
-        display_items = ['branch', 'status', 'commit_msg', 'commit_time']
+        display_items = ['head', 'state', 'commit_msg', 'commit_time']
     return display_items
 
 
@@ -179,29 +179,37 @@ def get_commit_time(prop: Dict[str, str]) -> str:
 
 
 def get_repo_status(prop: Dict[str, str], no_colors=False) -> str:
+    """Head name and state in one string, such as "master *". Only head name
+    (e.g. "master") if state is clean.
+    """
     head = get_head(prop['path'])
-    dirty, staged, untracked, color = _get_repo_status(prop, no_colors)
+    dirty, staged, untracked, color = _get_repo_states(prop, no_colors)
     if color:
         return f'{color}{head+" "+dirty+staged+untracked:<10}{Color.end}'
     return f'{head+" "+dirty+staged+untracked:<10}'
 
 
 def get_repo_head(prop: Dict[str, str], no_colors=False) -> str:
+    """Repo head name, colored.
+
+    Most likely a branch name, but can also be empty when no branch is checked
+    out."""
     head = get_head(prop['path'])
-    color = _get_repo_status(prop, no_colors)[-1]
+    color = _get_repo_states(prop, no_colors)[-1]
     if color:
         return f'{color}{head}{Color.end}'
     return head
 
 
 def get_repo_state(prop: Dict[str, str], no_colors=False) -> str:
-    dirty, staged, untracked, _ = _get_repo_status(prop, no_colors)
-    return dirty+staged+untracked
+    """String representing dirty, staged and untracked states."""
+    dirty, staged, untracked, _ = _get_repo_states(prop, no_colors)
+    return dirty + staged + untracked
 
 
-def _get_repo_status(prop: Dict[str, str], no_colors: bool) -> Tuple[str]:
+def _get_repo_states(prop: Dict[str, str], no_colors: bool) -> Tuple[str]:
     """
-    Return the status of one repo
+    Tuple of states and a color: (dirty, staged, untracked, color).
     """
     path = prop['path']
     flags = prop['flags']
@@ -234,8 +242,8 @@ def _get_repo_status(prop: Dict[str, str], no_colors: bool) -> Tuple[str]:
 
 
 ALL_INFO_ITEMS = {
-        'branch': get_repo_head,
-        'status': get_repo_state,
+        'head': get_repo_head,
+        'state': get_repo_state,
         'commit_msg': get_commit_msg,
         'commit_time': get_commit_time,
         'path': get_path,

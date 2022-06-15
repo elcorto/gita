@@ -210,10 +210,10 @@ def f_ll(args: argparse.Namespace):
         columns = utils.transpose(rows)
         col_dct = OrderedDict()
         col_dct["repo"] = map(utils.truncate_str, columns[0])
-        col_dct["branch"] = columns[1]
-        col_dct["status"] = columns[2]
+        col_dct["head"] = columns[1]
+        col_dct["state"] = columns[2]
         col_dct["commit_msg"] = map(utils.truncate_str, columns[3])
-        col_dct["stuff"] = columns[4]
+        col_dct["commit_time"] = columns[4]
 
         print(
             tabulate.tabulate(
