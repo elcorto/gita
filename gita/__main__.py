@@ -210,11 +210,14 @@ def f_ll(args: argparse.Namespace):
         for key in ["repo", "commit_msg"]:
             columns[key] = map(utils.truncate_str, columns[key])
 
-        print(
-            tabulate.tabulate(
-                utils.transpose(columns.values()), headers=columns.keys()
-            )
-        )
+        rows = utils.transpose(columns.values())
+        headers = columns.keys()
+        if args.dirty:
+            state_idx = list(headers).index("state")
+            print_rows = [row for row in rows if len(row[state_idx]) > 0]
+        else:
+            print_rows = rows
+        print(tabulate.tabulate(print_rows, headers=headers))
 
     repos = utils.get_repos()
     ctx = utils.get_context()
@@ -639,6 +642,9 @@ def main(argv=None):
     )
     p_ll.add_argument(
         "-g", action="store_true", help="Show repo summaries by group."
+    )
+    p_ll.add_argument(
+        "-d", "--dirty", action="store_true", help="Show only dirty repos."
     )
     p_ll.set_defaults(func=f_ll)
 
