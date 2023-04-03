@@ -219,6 +219,20 @@ def f_ll(args: argparse.Namespace):
         else:
             print_rows = rows
         print(tabulate.tabulate(print_rows, headers=headers))
+        # Example of using rich instead of tabulate.
+        #
+        # Problem: The ascii color escape codes mess up column witdth
+        # calculation.
+        #
+        ##from rich.console import Console
+        ##from rich.table import Table
+        ##table = Table(title="")
+        ##for col in columns:
+        ##    table.add_column(col)
+        ##for row in print_rows:
+        ##    table.add_row(*row)
+        ##console = Console()
+        ##console.print(table)
 
     repos = utils.get_repos()
     ctx = utils.get_context()
