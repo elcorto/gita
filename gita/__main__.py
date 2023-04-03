@@ -208,8 +208,9 @@ def f_ll(args: argparse.Namespace):
     def print_repo_table(repos):
         columns = utils.describe(repos, no_colors=args.no_colors)
         for key in ["repo", "commit_msg"]:
-            columns[key] = map(utils.truncate_str, columns[key])
-
+            columns[key] = map(
+                lambda s: utils.truncate_str(s, length=30), columns[key]
+            )
         rows = utils.transpose(columns.values())
         headers = columns.keys()
         if args.dirty:
